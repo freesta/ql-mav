@@ -86,7 +86,7 @@
     <ClCompile Include="..\..\source\stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\..\source\qlmav.ico" />
+    <Image Include="qlmav.ico" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="qlmav.rc" />
