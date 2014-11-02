@@ -29,6 +29,7 @@ HINSTANCE hInst;								// current instance
 TCHAR szTitle[MAX_LOADSTRING];					// The title bar text
 TCHAR szWindowClass[MAX_LOADSTRING];			// the main window class name
 
+HWND main_window = NULL;
 HWND text_box = NULL;
 HWND graph_box = NULL;
 HWND sens_box = NULL;
@@ -94,6 +95,7 @@ LRESULT CALLBACK	WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK	AboutProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK	ConvertProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK	ErrorProc(HWND, UINT, WPARAM, LPARAM);
+
 void ConvertToMcpi(double convert_to_mcpi);
 void ConvertFromMcpi();
 
@@ -128,7 +130,8 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
   // Main message loop:
   while (GetMessage(&msg, NULL, 0, 0))
   {
-    if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
+
+    if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg) && !IsDialogMessage(main_window,&msg))
     {
       TranslateMessage(&msg);
       DispatchMessage(&msg);
@@ -170,7 +173,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
   //  hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
   //     CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
-  hWnd = CreateWindow(szWindowClass, szTitle,  WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_CLIPCHILDREN,
+  hWnd = main_window = CreateWindow(szWindowClass, szTitle,  WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_CLIPCHILDREN,
     CW_USEDEFAULT, CW_USEDEFAULT, 525, 310, NULL, NULL, hInstance, NULL);
 
   if (!hWnd)
@@ -188,7 +191,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
   rid[0].usUsage = 0x02; 
   rid[0].dwFlags = RIDEV_INPUTSINK;  
   rid[0].hwndTarget = hWnd;
-      
+
 
   if (RegisterRawInputDevices(rid, 1, sizeof(rid[0])) == FALSE) {
     //registration failed. Call GetLastError for the cause of the error
@@ -287,66 +290,67 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
   case WM_CREATE:
 
-  // Todo: Put this all in a panel and make the program resizeable.
+    // Todo: Put this all in a panel and make the program resizeable.
     sens_box = CreateWindow(L"EDIT",
       L"4",
-      WS_BORDER | WS_CHILD | WS_VISIBLE,
+      WS_BORDER | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
       420,10,35,17,
       hWnd, NULL,NULL, NULL);
     SendMessage(sens_box,WM_SETFONT,(WPARAM)standard_font,TRUE);
+    //SetWindowSubclass(sens_box,ButtonProc,0,0); // 
 
     accel_box = CreateWindow(L"EDIT",
       L"0",
-      WS_BORDER | WS_CHILD | WS_VISIBLE,
+      WS_BORDER | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
       420,34,35,17,
       hWnd, NULL,NULL, NULL);
     SendMessage(accel_box,WM_SETFONT,(WPARAM)standard_font,TRUE);
 
     offset_box = CreateWindow(L"EDIT",
       L"0",
-      WS_BORDER | WS_CHILD | WS_VISIBLE,
+      WS_BORDER | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
       420,58,35,17,
       hWnd, NULL,NULL, NULL);
     SendMessage(offset_box,WM_SETFONT,(WPARAM)standard_font,TRUE);
 
     senscap_box = CreateWindow(L"EDIT",
       L"0",
-      WS_BORDER | WS_CHILD | WS_VISIBLE,
+      WS_BORDER | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
       420,82,35,17,
       hWnd, NULL,NULL, NULL);
     SendMessage(senscap_box,WM_SETFONT,(WPARAM)standard_font,TRUE);
 
     power_box = CreateWindow(L"EDIT",
       L"2",
-      WS_BORDER | WS_CHILD | WS_VISIBLE,
+      WS_BORDER | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
       420,106,35,17,
       hWnd, NULL,NULL, NULL);
     SendMessage(power_box,WM_SETFONT,(WPARAM)standard_font,TRUE);
 
     m_cpi_box = CreateWindow(L"EDIT",
       L"0",
-      WS_BORDER | WS_CHILD | WS_VISIBLE,
+      WS_BORDER | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
       420,130,35,17,
       hWnd, NULL,NULL, NULL);
     SendMessage(m_cpi_box,WM_SETFONT,(WPARAM)standard_font,TRUE);
 
     fps_box = CreateWindow(L"EDIT",
       L"125",
-      WS_BORDER | WS_CHILD | WS_VISIBLE,
+      WS_BORDER | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
       420,154,35,17,
       hWnd, NULL,NULL, NULL);
     SendMessage(fps_box,WM_SETFONT,(WPARAM)standard_font,TRUE);
-    
+
     x_scale_box = CreateWindow(L"EDIT",
       L"8",
-      WS_BORDER | WS_CHILD | WS_VISIBLE,
+      WS_BORDER | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
       420,178,35,17,
       hWnd, NULL,NULL, NULL);
     SendMessage(x_scale_box,WM_SETFONT,(WPARAM)standard_font,TRUE);
 
     y_scale_box = CreateWindow(L"EDIT",
       L"8",
-      WS_BORDER | WS_CHILD | WS_VISIBLE,
+      WS_BORDER | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
       420,202,35,17,
       hWnd, NULL,NULL, NULL);
     SendMessage(y_scale_box,WM_SETFONT,(WPARAM)standard_font,TRUE);
@@ -446,7 +450,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       hWnd, (HMENU) IDC_CONVERT_BUTTON, NULL, NULL);
     SendMessage(convert_button,WM_SETFONT,(WPARAM)standard_font,TRUE);
     CreateToolTipForRect(convert_button,hInst,L"If m_cpi is set to 0, convert all settings to m_cpi system. Otherwise, convert all settings back.");
-    
+
     SetWindowLongPtr(text_box,-4,(LONG_PTR)&TextBoxProc);
     break;
 
@@ -473,6 +477,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       x_max=wcstod(global_temp_string,NULL);
       GetWindowText(y_scale_box,global_temp_string,10);
       y_max=wcstod(global_temp_string,NULL);
+      InvalidateRect(hWnd,&invalidate_rect,false);
     }
     switch (wmId)
     {
@@ -488,10 +493,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG3), hWnd, ErrorProc);
       }
       else {
-      if (m_cpi==0) {
-        DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG2), hWnd, ConvertProc);
-      }
-      else ConvertFromMcpi();
+        if (m_cpi==0) {
+          DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG2), hWnd, ConvertProc);
+        }
+        else ConvertFromMcpi();
       }
       break;
 
@@ -686,7 +691,7 @@ INT_PTR CALLBACK ConvertProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
   switch (message)
   {
   case WM_INITDIALOG:
-      mcpi_convert_box = CreateWindow(L"EDIT",
+    mcpi_convert_box = CreateWindow(L"EDIT",
       L"",
       WS_BORDER | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
       105,10,35,17,
@@ -723,59 +728,60 @@ INT_PTR CALLBACK ConvertProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
   return (INT_PTR)FALSE;
 }
 
+
 void ConvertToMcpi(double convert_to_mcpi){
-      double new_sens=SensToMcpiSens(sens,0.022,convert_to_mcpi);
-      StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_sens);
-      Static_SetText(sens_box,global_temp_string);
+  double new_sens=SensToMcpiSens(sens,0.022,convert_to_mcpi);
+  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_sens);
+  Static_SetText(sens_box,global_temp_string);
 
-      double new_senscap=SensToMcpiSens(senscap,0.022,convert_to_mcpi);
-      StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_senscap);
-      Static_SetText(senscap_box,global_temp_string);
+  double new_senscap=SensToMcpiSens(senscap,0.022,convert_to_mcpi);
+  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_senscap);
+  Static_SetText(senscap_box,global_temp_string);
 
-      double new_accel=AccelToMcpiAccel(accel,0.022,convert_to_mcpi);
-      StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_accel);
-      Static_SetText(accel_box,global_temp_string);
+  double new_accel=AccelToMcpiAccel(accel,0.022,convert_to_mcpi);
+  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_accel);
+  Static_SetText(accel_box,global_temp_string);
 
-      double new_offset=OffsetToMcpiOffset(offset,convert_to_mcpi);
-      StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_offset);
-      Static_SetText(offset_box,global_temp_string);
+  double new_offset=OffsetToMcpiOffset(offset,convert_to_mcpi);
+  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_offset);
+  Static_SetText(offset_box,global_temp_string);
 
-      double new_y_scale=SensToMcpiSens(y_max,0.022,convert_to_mcpi);
-      StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_y_scale);
-      Static_SetText(y_scale_box,global_temp_string);
+  double new_y_scale=SensToMcpiSens(y_max,0.022,convert_to_mcpi);
+  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_y_scale);
+  Static_SetText(y_scale_box,global_temp_string);
 
-      double new_x_scale=SpeedToMcpiSpeed(x_max,convert_to_mcpi);
-      StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_x_scale);
-      Static_SetText(x_scale_box,global_temp_string);
+  double new_x_scale=SpeedToMcpiSpeed(x_max,convert_to_mcpi);
+  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_x_scale);
+  Static_SetText(x_scale_box,global_temp_string);
 
-      StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.0f"),convert_to_mcpi);
-      Static_SetText(m_cpi_box,global_temp_string);
+  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.0f"),convert_to_mcpi);
+  Static_SetText(m_cpi_box,global_temp_string);
 }
 
 void ConvertFromMcpi(){
-      double new_sens=McpiSensToSens(sens,0.022,m_cpi);
-      StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_sens);
-      Static_SetText(sens_box,global_temp_string);
+  double new_sens=McpiSensToSens(sens,0.022,m_cpi);
+  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_sens);
+  Static_SetText(sens_box,global_temp_string);
 
-      double new_senscap=McpiSensToSens(senscap,0.022,m_cpi);
-      StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_senscap);
-      Static_SetText(senscap_box,global_temp_string);
+  double new_senscap=McpiSensToSens(senscap,0.022,m_cpi);
+  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_senscap);
+  Static_SetText(senscap_box,global_temp_string);
 
-      double new_accel=McpiAccelToAccel(accel,0.022,m_cpi);
-      StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_accel);
-      Static_SetText(accel_box,global_temp_string);
+  double new_accel=McpiAccelToAccel(accel,0.022,m_cpi);
+  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_accel);
+  Static_SetText(accel_box,global_temp_string);
 
-      double new_offset=McpiOffsetToOffset(offset,m_cpi);
-      StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_offset);
-      Static_SetText(offset_box,global_temp_string);
+  double new_offset=McpiOffsetToOffset(offset,m_cpi);
+  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_offset);
+  Static_SetText(offset_box,global_temp_string);
 
-      double new_y_scale=McpiSensToSens(y_max,0.022,m_cpi);
-      StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_y_scale);
-      Static_SetText(y_scale_box,global_temp_string);
+  double new_y_scale=McpiSensToSens(y_max,0.022,m_cpi);
+  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_y_scale);
+  Static_SetText(y_scale_box,global_temp_string);
 
-      double new_x_scale=McpiSpeedToSpeed(x_max,m_cpi);
-      StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_x_scale);
-      Static_SetText(x_scale_box,global_temp_string);
+  double new_x_scale=McpiSpeedToSpeed(x_max,m_cpi);
+  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_x_scale);
+  Static_SetText(x_scale_box,global_temp_string);
 
-      Static_SetText(m_cpi_box,L"0");
+  Static_SetText(m_cpi_box,L"0");
 }
