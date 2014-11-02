@@ -46,12 +46,12 @@ long graph_x_max=400;
 long graph_y_max=209;
 double speed=0.0;
 double multi=0.0;
-double accel=3;
-double senscap=5;
-double sens=3;
-double offset=0.4;
+double accel=0;
+double senscap=0;
+double sens=4;
+double offset=0;
 double power=2;
-double m_cpi=400;
+double m_cpi=0;
 double fps=125;
 double cur_fps=0.0;
 long lastx=0;
@@ -205,7 +205,7 @@ void CreateToolTipForRect(HWND hwndParent, HINSTANCE ginst, TCHAR* text)
   // Set up "tool" information. In this case, the "tool" is the entire parent window.
 
   TOOLINFO ti = { 0 };
-  ti.cbSize   = sizeof(TOOLINFO) - 4; // The -4 is due to a common windows bug. TODO: Enable Visual Styles and remove -4.
+  ti.cbSize   = sizeof(TOOLINFO); // This only works if it if -4 is appended when visual styles are disabled.
   ti.uFlags   = TTF_SUBCLASS;
   ti.hwnd     = hwndParent;
   ti.hinst    = ginst;
@@ -286,14 +286,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 
     sens_box = CreateWindow(L"EDIT",
-      L"3",
+      L"4",
       WS_BORDER | WS_CHILD | WS_VISIBLE,
       420,10,35,17,
       hWnd, NULL,NULL, NULL);
     SendMessage(sens_box,WM_SETFONT,(WPARAM)standard_font,TRUE);
 
     accel_box = CreateWindow(L"EDIT",
-      L"0.1",
+      L"0",
       WS_BORDER | WS_CHILD | WS_VISIBLE,
       420,34,35,17,
       hWnd, NULL,NULL, NULL);
@@ -558,20 +558,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     h_old   = SelectObject(hdc_backbuffer, hbm_backbuffer);
 
     FillRect(hdc_backbuffer,&invalidate_rect,black);
-    hResult = StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.0f (%s)"), y_max, move_unit_str);
-    SetTextColor(hdc_backbuffer,0x00BBBBBB);
+    hResult = StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.0f [%s]"), y_max, move_unit_str);
+    SetTextColor(hdc_backbuffer,0x00DDDDDD);
     SetBkColor(hdc_backbuffer,0x00000000);
     SelectObject(hdc_backbuffer,standard_font);
     TextOut(hdc_backbuffer, 3, 0, global_temp_string, wcslen(global_temp_string));
     TextOut(hdc_backbuffer, 3, invalidate_rect.bottom-27, L"0", 1);
 
-    hResult = StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("(%s) %.0f"),  speed_unit_str, x_max);
+    hResult = StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("[%s] %.0f"),  speed_unit_str, x_max);
     SetTextAlign(hdc_backbuffer,TA_RIGHT);
     TextOut(hdc_backbuffer, invalidate_rect.right-13, invalidate_rect.bottom-27, global_temp_string, wcslen(global_temp_string));
 
 
-
-    OutputDebugString(global_temp_string);
+    //OutputDebugString(global_temp_string);
 
 
     for (int i=0;i<graph_x_max;i++){

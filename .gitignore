@@ -227,3 +227,6 @@ $RECYCLE.BIN/
 *.msi
 *.msm
 *.msp
+
+# My random stuff
+stuff/
