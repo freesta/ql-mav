@@ -282,21 +282,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
   HDC hdc;
   HRESULT hResult;
 
-  NONCLIENTMETRICS ncm;
-  ncm.cbSize = sizeof(NONCLIENTMETRICS);
-  ::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &ncm, 0);
-  //HFONT hFont = ::CreateFontIndirect(&ncm.lfMessageFont);
-
-
-
-
-
   switch (message)
   {
 
   case WM_CREATE:
 
-
+  // Todo: Put this all in a panel and make the program resizeable.
     sens_box = CreateWindow(L"EDIT",
       L"4",
       WS_BORDER | WS_CHILD | WS_VISIBLE,
@@ -454,12 +445,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       432,222,55,23,
       hWnd, (HMENU) IDC_CONVERT_BUTTON, NULL, NULL);
     SendMessage(convert_button,WM_SETFONT,(WPARAM)standard_font,TRUE);
-
-    //MessageBox(NULL,L"Conversion only works with power set to 2.",L"Error",0);
     CreateToolTipForRect(convert_button,hInst,L"If m_cpi is set to 0, convert all settings to m_cpi system. Otherwise, convert all settings back.");
     
-    
-
     SetWindowLongPtr(text_box,-4,(LONG_PTR)&TextBoxProc);
     break;
 
@@ -620,7 +607,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       if (offset>x) y=sens;
       if (y>senscap && senscap>0) y=senscap;
       int j=graph_y_max-y*graph_y_max/y_max;
-      SetPixel(hdc_backbuffer,i,j,0x00999999);
+      SetPixel(hdc_backbuffer,i,j,0x00BBBBBB);
     }
 
     multi=sens+pow((accel*(speed-offset)),power);
@@ -719,7 +706,6 @@ INT_PTR CALLBACK ConvertProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
   case WM_COMMAND:
     if (LOWORD(wParam) == IDOK)
     {
-      // TODO: Convert stuff here.
       GetDlgItemText(hDlg, IDC_MCPI_BOX, global_temp_string, 10);
       double convert_to_mcpi=wcstod(global_temp_string,NULL);
       ConvertToMcpi(convert_to_mcpi);
