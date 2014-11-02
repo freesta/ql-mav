@@ -27,12 +27,18 @@
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\source\conversion.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\source\qlmav.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\stdafx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\conversion.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -48,6 +54,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="arrow.cur">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="custombu.bin">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

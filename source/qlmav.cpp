@@ -18,8 +18,11 @@
 #include "Math.h" 
 #include <chrono>
 #include <commctrl.h>
+#include "conversion.h"
 
 #define MAX_LOADSTRING 100
+#define IDC_CONVERT_BUTTON 2000
+#define IDC_MCPI_BOX 2001
 
 // Global Variables:
 HINSTANCE hInst;								// current instance
@@ -39,6 +42,8 @@ HWND x_scale_box = NULL;
 HWND y_scale_box = NULL;
 HWND controlcontainer = NULL;
 HWND caption_box = NULL;
+HWND convert_button = NULL;
+HWND mcpi_convert_box = NULL;
 
 double x_max=8;
 double y_max=8;
@@ -73,7 +78,8 @@ HFONT standard_font;
 auto t_start = std::chrono::high_resolution_clock::now();
 
 TCHAR global_temp_string[300];
-TCHAR info_string[300];
+TCHAR info_string_left[300];
+TCHAR info_string_right[300];
 TCHAR speed_unit_str_cpms[10]=L"counts/ms";
 TCHAR speed_unit_str_cmps[10]=L"cm/s";
 TCHAR move_unit_str_cpms[21]=L"deg/(counts*0.022)";
@@ -85,7 +91,11 @@ TCHAR *move_unit_str=move_unit_str_cpms;
 ATOM				MyRegisterClass(HINSTANCE hInstance);
 BOOL				InitInstance(HINSTANCE, int);
 LRESULT CALLBACK	WndProc(HWND, UINT, WPARAM, LPARAM);
-INT_PTR CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK	AboutProc(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK	ConvertProc(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK	ErrorProc(HWND, UINT, WPARAM, LPARAM);
+void ConvertToMcpi(double convert_to_mcpi);
+void ConvertFromMcpi();
 
 int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
                        _In_opt_ HINSTANCE hPrevInstance,
@@ -161,7 +171,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
   //  hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
   //     CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
   hWnd = CreateWindow(szWindowClass, szTitle,  WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_CLIPCHILDREN,
-    CW_USEDEFAULT, CW_USEDEFAULT, 525, 330, NULL, NULL, hInstance, NULL);
+    CW_USEDEFAULT, CW_USEDEFAULT, 525, 310, NULL, NULL, hInstance, NULL);
 
   if (!hWnd)
   {
@@ -200,6 +210,7 @@ void CreateToolTipForRect(HWND hwndParent, HINSTANCE ginst, TCHAR* text)
 
   SetWindowPos(hwndTT, HWND_TOPMOST, 0, 0, 0, 0, 
     SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+  //SendMessage(hwndTT,TTM_SETMAXTIPWIDTH, 0, 200);  // Multiline-tooltip
 
 
   // Set up "tool" information. In this case, the "tool" is the entire parent window.
@@ -241,7 +252,8 @@ LRESULT CALLBACK TextBoxProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
     SetTextColor(hdc_backbuffer_2,0x00000000);
     SetBkMode(hdc_backbuffer_2,TRANSPARENT);
     SelectObject(hdc_backbuffer_2,standard_font);
-    DrawText(hdc_backbuffer_2,info_string,wcslen(info_string),&invalidate_rect_2,DT_LEFT | DT_EXTERNALLEADING | DT_WORDBREAK);
+    DrawText(hdc_backbuffer_2,info_string_left,wcslen(info_string_left),&invalidate_rect_2,DT_LEFT | DT_EXTERNALLEADING | DT_WORDBREAK);
+    DrawText(hdc_backbuffer_2,info_string_right,wcslen(info_string_right),&invalidate_rect_2,DT_RIGHT | DT_EXTERNALLEADING | DT_WORDBREAK);
     BitBlt(hdc, 0, 0, 400, 100, hdc_backbuffer_2, 0, 0, SRCCOPY);
 
 
@@ -333,7 +345,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       420,154,35,17,
       hWnd, NULL,NULL, NULL);
     SendMessage(fps_box,WM_SETFONT,(WPARAM)standard_font,TRUE);
-
+    
     x_scale_box = CreateWindow(L"EDIT",
       L"8",
       WS_BORDER | WS_CHILD | WS_VISIBLE,
@@ -433,8 +445,20 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     text_box = CreateWindow(L"STATIC",
       L"If you can see this something is not working.",
       WS_CHILD | WS_VISIBLE,
-      10,220,400,100,
+      10,220,400,30,
       hWnd, NULL,NULL, NULL);
+
+    convert_button = CreateWindow(L"BUTTON",
+      L"convert",
+      WS_CHILD | WS_VISIBLE,
+      432,222,55,23,
+      hWnd, (HMENU) IDC_CONVERT_BUTTON, NULL, NULL);
+    SendMessage(convert_button,WM_SETFONT,(WPARAM)standard_font,TRUE);
+
+    //MessageBox(NULL,L"Conversion only works with power set to 2.",L"Error",0);
+    CreateToolTipForRect(convert_button,hInst,L"If m_cpi is set to 0, convert all settings to m_cpi system. Otherwise, convert all settings back.");
+    
+    
 
     SetWindowLongPtr(text_box,-4,(LONG_PTR)&TextBoxProc);
     break;
@@ -459,22 +483,36 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       GetWindowText(fps_box,global_temp_string,10);
       fps=wcstod(global_temp_string,NULL);
       GetWindowText(x_scale_box,global_temp_string,10);
-      x_max=(long)wcstod(global_temp_string,NULL);
+      x_max=wcstod(global_temp_string,NULL);
       GetWindowText(y_scale_box,global_temp_string,10);
-      y_max=(long)wcstod(global_temp_string,NULL);
+      y_max=wcstod(global_temp_string,NULL);
     }
     switch (wmId)
     {
     case ID_HELP_ABOUT:
-      DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG1), hWnd, About);
+      DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG1), hWnd, AboutProc);
       break;
     case ID_FILE_EXIT:
       DestroyWindow(hWnd);
       break;
+    case IDC_CONVERT_BUTTON:
+      if (power!=1){
+        MessageBeep(1);
+        DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG3), hWnd, ErrorProc);
+      }
+      else {
+      if (m_cpi==0) {
+        DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG2), hWnd, ConvertProc);
+      }
+      else ConvertFromMcpi();
+      }
+      break;
+
     default:
       return DefWindowProc(hWnd, message, wParam, lParam);
     }
     break;
+
   case WM_INPUT: {
 
     UINT dwSize;
@@ -521,9 +559,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
           speed_unit_str=speed_unit_str_cpms;
           move_unit_str=move_unit_str_cpms;
         }
-        hResult = StringCchPrintf(info_string, STRSAFE_MAX_CCH, TEXT("mouse speed: %.3f %s\r\nmultiplier: %.3f %s\r\nfps: %.0f\r\n"), 
+        hResult = StringCchPrintf(info_string_left, STRSAFE_MAX_CCH, TEXT("mouse speed: %.3f %s\r\nmultiplier: %.3f %s\r\n"), 
           speed, speed_unit_str,
-          multi, move_unit_str,
+          multi, move_unit_str);
+        hResult = StringCchPrintf(info_string_right, STRSAFE_MAX_CCH, TEXT("%.0f fps"), 
           cur_fps);
 
         InvalidateRect(hWnd,&invalidate_rect,false);
@@ -532,8 +571,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
           // TODO: write error handler
         }
-        // OutputDebugString(info_string);
-        // Static_SetText(text_box, info_string);
+        // OutputDebugString(info_string_left);
+        // Static_SetText(text_box, info_string_left);
         InvalidateRect(text_box, &invalidate_rect_2,false);
 
         t_start =t_end;
@@ -558,14 +597,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     h_old   = SelectObject(hdc_backbuffer, hbm_backbuffer);
 
     FillRect(hdc_backbuffer,&invalidate_rect,black);
-    hResult = StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.0f [%s]"), y_max, move_unit_str);
+    hResult = StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.1f [%s]"), y_max, move_unit_str);
     SetTextColor(hdc_backbuffer,0x00DDDDDD);
     SetBkColor(hdc_backbuffer,0x00000000);
     SelectObject(hdc_backbuffer,standard_font);
     TextOut(hdc_backbuffer, 3, 0, global_temp_string, wcslen(global_temp_string));
     TextOut(hdc_backbuffer, 3, invalidate_rect.bottom-27, L"0", 1);
 
-    hResult = StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("[%s] %.0f"),  speed_unit_str, x_max);
+    hResult = StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("[%s] %.1f"),  speed_unit_str, x_max);
     SetTextAlign(hdc_backbuffer,TA_RIGHT);
     TextOut(hdc_backbuffer, invalidate_rect.right-13, invalidate_rect.bottom-27, global_temp_string, wcslen(global_temp_string));
 
@@ -616,7 +655,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 }
 
 // Message handler for about box.
-INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK AboutProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
   UNREFERENCED_PARAMETER(lParam);
   switch (message)
@@ -633,4 +672,124 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     break;
   }
   return (INT_PTR)FALSE;
+}
+
+INT_PTR CALLBACK ErrorProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+  UNREFERENCED_PARAMETER(lParam);
+  switch (message)
+  {
+  case WM_INITDIALOG:
+    return (INT_PTR)TRUE;
+
+  case WM_COMMAND:
+    if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
+    {
+      EndDialog(hDlg, LOWORD(wParam));
+      return (INT_PTR)TRUE;
+    }
+    break;
+  }
+  return (INT_PTR)FALSE;
+}
+
+INT_PTR CALLBACK ConvertProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+  UNREFERENCED_PARAMETER(lParam);
+  switch (message)
+  {
+  case WM_INITDIALOG:
+      mcpi_convert_box = CreateWindow(L"EDIT",
+      L"",
+      WS_BORDER | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
+      105,10,35,17,
+      hDlg, (HMENU)IDC_MCPI_BOX,NULL, NULL);
+    SendMessage(mcpi_convert_box,WM_SETFONT,(WPARAM)standard_font,TRUE);
+
+    caption_box = CreateWindow(L"STATIC",
+      L"CPI",
+      WS_CHILD | WS_VISIBLE,
+      145,12,35,17,
+      hDlg, (HMENU)IDC_MCPI_BOX,NULL, NULL);
+    SendMessage(caption_box,WM_SETFONT,(WPARAM)standard_font,TRUE);
+    //SetFocus(GetDlgItem(hDlg, IDC_MCPI_BOX));
+    SendMessage(hDlg, WM_NEXTDLGCTL, (WPARAM)mcpi_convert_box, TRUE);
+    return (INT_PTR)FALSE;
+
+  case WM_COMMAND:
+    if (LOWORD(wParam) == IDOK)
+    {
+      // TODO: Convert stuff here.
+      GetDlgItemText(hDlg, IDC_MCPI_BOX, global_temp_string, 10);
+      double convert_to_mcpi=wcstod(global_temp_string,NULL);
+      ConvertToMcpi(convert_to_mcpi);
+
+      EndDialog(hDlg, LOWORD(wParam));
+      return (INT_PTR)TRUE;
+    }
+    if (LOWORD(wParam) == IDCANCEL)
+    {
+      EndDialog(hDlg, LOWORD(wParam));
+      return (INT_PTR)TRUE;
+    }
+    break;
+  }
+  return (INT_PTR)FALSE;
+}
+
+void ConvertToMcpi(double convert_to_mcpi){
+      double new_sens=SensToMcpiSens(sens,0.022,convert_to_mcpi);
+      StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_sens);
+      Static_SetText(sens_box,global_temp_string);
+
+      double new_senscap=SensToMcpiSens(senscap,0.022,convert_to_mcpi);
+      StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_senscap);
+      Static_SetText(senscap_box,global_temp_string);
+
+      double new_accel=AccelToMcpiAccel(accel,0.022,convert_to_mcpi);
+      StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_accel);
+      Static_SetText(accel_box,global_temp_string);
+
+      double new_offset=OffsetToMcpiOffset(offset,convert_to_mcpi);
+      StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_offset);
+      Static_SetText(offset_box,global_temp_string);
+
+      double new_y_scale=SensToMcpiSens(y_max,0.022,convert_to_mcpi);
+      StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_y_scale);
+      Static_SetText(y_scale_box,global_temp_string);
+
+      double new_x_scale=SpeedToMcpiSpeed(x_max,convert_to_mcpi);
+      StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_x_scale);
+      Static_SetText(x_scale_box,global_temp_string);
+
+      StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.0f"),convert_to_mcpi);
+      Static_SetText(m_cpi_box,global_temp_string);
+}
+
+void ConvertFromMcpi(){
+      double new_sens=McpiSensToSens(sens,0.022,m_cpi);
+      StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_sens);
+      Static_SetText(sens_box,global_temp_string);
+
+      double new_senscap=McpiSensToSens(senscap,0.022,m_cpi);
+      StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_senscap);
+      Static_SetText(senscap_box,global_temp_string);
+
+      double new_accel=McpiAccelToAccel(accel,0.022,m_cpi);
+      StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_accel);
+      Static_SetText(accel_box,global_temp_string);
+
+      double new_offset=McpiOffsetToOffset(offset,m_cpi);
+      StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_offset);
+      Static_SetText(offset_box,global_temp_string);
+
+      double new_y_scale=McpiSensToSens(y_max,0.022,m_cpi);
+      StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_y_scale);
+      Static_SetText(y_scale_box,global_temp_string);
+
+      double new_x_scale=McpiSpeedToSpeed(x_max,m_cpi);
+      StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_x_scale);
+      Static_SetText(x_scale_box,global_temp_string);
+
+      Static_SetText(m_cpi_box,L"0");
 }

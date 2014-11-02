@@ -76,12 +76,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\source\conversion.h" />
     <ClInclude Include="..\..\source\qlmav.h" />
     <ClInclude Include="..\..\source\stdafx.h" />
     <ClInclude Include="..\..\source\targetver.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\source\conversion.cpp" />
     <ClCompile Include="..\..\source\qlmav.cpp" />
     <ClCompile Include="..\..\source\stdafx.cpp" />
   </ItemGroup>
@@ -93,6 +95,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="arrow.cur" />
+    <None Include="custombu.bin" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
