@@ -5,7 +5,7 @@ QL Mouse Accel Visualizer is a small tool to visualize how your mouse accelerati
 ## Why does this exist?
 When I played around with accel settings I never noticed shit while playing. I tried to figure out how and when the accel kicks in by endlessly playing around but never got a good feel of it. Now I can just move my mouse around, look at the graph and see what's happening to my sensitivity. The practical use of it might be limited, but I found it interesting to see how this accel stuff works in detail, and maybe you do too.
 
-## How to use the visualizer
+## How to use
 
 - Enter the Quake Live CVARs into the according fields and move your mouse around.
 - The x-axis correlates to the mouse speed.
@@ -23,11 +23,10 @@ When I played around with accel settings I never noticed shit while playing. I t
 - Your computer needs to be fast enough to run this. It should be but I am a bad programmer so it might require a high end PC, who knows.
 - Tested only on Windows 7 so far. Ubuntu/Wine didn't work for me due to raw mouse input.
 
-## Not implemented:
+## Not implemented CVARs:
 
 - m_yaw/m_pitch: Those are are hardcoded to 0.022 at the moment.
 - m_filter: This is hardcoded to 0. Not sure if implementing this is worth it in the scope of what the tool aims to do.
-- While the game actually supports negative multipliers (you move your mouse to the left and the view shifts to the right), the graph in the program only displays values down to 0 right now.
 
 ## Disclaimer
 
