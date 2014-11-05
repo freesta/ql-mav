@@ -68,9 +68,13 @@ RECT invalidate_rect_2 = {0,0,400,100};
 
 BITMAP bitmap;
 RECT last_pixel;
-HBRUSH red=CreateSolidBrush(0x000000FF);
-HBRUSH white=CreateSolidBrush(0x00FFFFFF);
-HBRUSH black=CreateSolidBrush(0x00000000);
+COLORREF background_color = 0x00f0f0f0;
+COLORREF text_color = 0x00000000;
+HBRUSH red_brush=CreateSolidBrush(0x000000FF);
+HBRUSH white_brush=CreateSolidBrush(0x00FFFFFF);
+HBRUSH black_brush=CreateSolidBrush(0x00000000);
+HBRUSH background_brush=CreateSolidBrush(background_color);
+
 HDC          hdc_backbuffer, hdc_backbuffer_2;
 HBITMAP      hbm_backbuffer, hbm_backbuffer_2;
 HANDLE       h_old, h_old_2;
@@ -119,6 +123,12 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
   LoadString(hInstance, IDC_QLMOUSEACCELHELPER, szWindowClass, MAX_LOADSTRING);
   MyRegisterClass(hInstance);
 
+  INITCOMMONCONTROLSEX InitCtrlEx;
+
+  InitCtrlEx.dwSize = sizeof(INITCOMMONCONTROLSEX);
+  InitCtrlEx.dwICC  = ICC_LINK_CLASS, ICC_PROGRESS_CLASS, ICC_STANDARD_CLASSES ;
+  InitCommonControlsEx(&InitCtrlEx);
+
   // Perform application initialization:
   if (!InitInstance (hInstance, nCmdShow))
   {
@@ -157,7 +167,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
   //	wcex.hIcon			= LoadIcon(hInstance, MAKEINTRESOURCE(IDI_QLMOUSEACCELHELPER
   wcex.hIcon			= LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON1));
   wcex.hCursor		= LoadCursor(NULL, IDC_ARROW);
-  wcex.hbrBackground	= (HBRUSH)(COLOR_WINDOW);
+  wcex.hbrBackground	= background_brush;
   wcex.lpszMenuName	= MAKEINTRESOURCE(IDR_MENU1);
   wcex.lpszClassName	= szWindowClass;
   wcex.hIconSm		= LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_ICON1));
@@ -202,7 +212,6 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
   return TRUE;
 }
 
-// Tooltips are not used at the moment.
 void CreateToolTipForRect(HWND hwndParent, HINSTANCE ginst, TCHAR* text)
 {
   // Create a tooltip.
@@ -250,7 +259,7 @@ LRESULT CALLBACK TextBoxProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
     hbm_backbuffer_2 = CreateCompatibleBitmap(hdc, 400, 100);
     h_old_2   = SelectObject(hdc_backbuffer_2, hbm_backbuffer_2);
 
-    FillRect(hdc_backbuffer_2,&invalidate_rect_2,(HBRUSH)COLOR_WINDOW);
+    FillRect(hdc_backbuffer_2,&invalidate_rect_2,background_brush);
 
     SetTextColor(hdc_backbuffer_2,0x00000000);
     SetBkMode(hdc_backbuffer_2,TRANSPARENT);
@@ -274,9 +283,8 @@ LRESULT CALLBACK TextBoxProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
   default:
     return DefWindowProc(hWnd, message, wParam, lParam);
   }
-  return 0;
+  return true;
 }
-
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -445,7 +453,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     convert_button = CreateWindow(L"BUTTON",
       L"convert",
-      WS_CHILD | WS_VISIBLE,
+      WS_CHILD | WS_VISIBLE | BS_FLAT,
       432,222,55,23,
       hWnd, (HMENU) IDC_CONVERT_BUTTON, NULL, NULL);
     SendMessage(convert_button,WM_SETFONT,(WPARAM)standard_font,TRUE);
@@ -588,7 +596,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     h_old   = SelectObject(hdc_backbuffer, hbm_backbuffer);
 
-    FillRect(hdc_backbuffer,&invalidate_rect,black);
+    FillRect(hdc_backbuffer,&invalidate_rect,black_brush);
     hResult = StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.1f [%s]"), y_max, move_unit_str);
     SetTextColor(hdc_backbuffer,0x00DDDDDD);
     SetBkColor(hdc_backbuffer,0x00000000);
@@ -624,7 +632,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     last_pixel.right=speed*graph_x_max/x_max+3;
     last_pixel.bottom=graph_y_max-multi*graph_y_max/y_max+3;
 
-    FillRect(hdc_backbuffer,&last_pixel,red);
+    FillRect(hdc_backbuffer,&last_pixel,red_brush);
 
     BitBlt(hdc, 10, 10, graph_x_max, graph_y_max, hdc_backbuffer, 0, 0, SRCCOPY);
 
@@ -637,6 +645,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     EndPaint(hWnd,&ps);
 
     break;
+  case WM_CTLCOLORSTATIC:
+    {
+      HDC hdcStatic = (HDC) wParam;
+      SetTextColor(hdcStatic, text_color);
+      SetBkColor(hdcStatic, background_color);
+
+      return (INT_PTR)background_brush;
+    }
   case WM_DESTROY:
     PostQuitMessage(0);
     break;
@@ -646,7 +662,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
   return 0;
 }
 
-// Message handler for about box.
 INT_PTR CALLBACK AboutProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
   UNREFERENCED_PARAMETER(lParam);
@@ -662,6 +677,17 @@ INT_PTR CALLBACK AboutProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
       return (INT_PTR)TRUE;
     }
     break;
+  case WM_CTLCOLORDLG:
+    return (INT_PTR)background_brush;
+  case WM_CTLCOLORSTATIC:
+    {
+      HDC hdcStatic = (HDC) wParam;
+      SetTextColor(hdcStatic, text_color);
+      SetBkColor(hdcStatic, background_color);
+
+      return (INT_PTR)background_brush;
+    }
+
   }
   return (INT_PTR)FALSE;
 }
@@ -681,6 +707,16 @@ INT_PTR CALLBACK ErrorProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
       return (INT_PTR)TRUE;
     }
     break;
+  case WM_CTLCOLORDLG:
+    return (INT_PTR)background_brush;
+  case WM_CTLCOLORSTATIC:
+    {
+      HDC hdcStatic = (HDC) wParam;
+      SetTextColor(hdcStatic, text_color);
+      SetBkColor(hdcStatic, background_color);
+
+      return (INT_PTR)background_brush;
+    }
   }
   return (INT_PTR)FALSE;
 }
@@ -724,6 +760,16 @@ INT_PTR CALLBACK ConvertProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
       return (INT_PTR)TRUE;
     }
     break;
+  case WM_CTLCOLORDLG:
+    return (INT_PTR)background_brush;
+  case WM_CTLCOLORSTATIC:
+    {
+      HDC hdcStatic = (HDC) wParam;
+      SetTextColor(hdcStatic, text_color);
+      SetBkColor(hdcStatic, background_color);
+
+      return (INT_PTR)background_brush;
+    }
   }
   return (INT_PTR)FALSE;
 }
