@@ -46,34 +46,37 @@ HWND caption_box = NULL;
 HWND convert_button = NULL;
 HWND mcpi_convert_box = NULL;
 
-double x_max=8;
-double y_max=8;
-long graph_x_max=400;
-long graph_y_max=209;
-double speed=0.0;
-double multi=0.0;
-double accel=0;
-double senscap=0;
-double sens=4;
-double offset=0;
-double power=2;
-double m_cpi=0;
-double fps=125;
-double cur_fps=0.0;
-long lastx=0;
-long lasty=0;
+double x_max = 8;
+double y_max = 8;
+long graph_x_max = 400;
+long graph_y_max = 209;
 
-RECT invalidate_rect = {10,10,410,219};
-RECT invalidate_rect_2 = {0,0,400,100};
+double speed = 0.0;
+double accel = 0;
+double senscap = 0;
+double sens = 4;
+double offset = 0;
+double power = 2;
+double m_cpi = 0;
+double fps = 125;
+
+double multi = 0.0;
+double cur_fps = 0.0;
+
+long lastx = 0;
+long lasty = 0;
+
+RECT invalidate_rect = { 10, 10, 410, 219 };
+RECT invalidate_rect_2 = { 0, 0, 400, 100 };
 
 BITMAP bitmap;
 RECT last_pixel;
-COLORREF background_color = 0x00f0f0f0;
+COLORREF background_color = 0x00f0f0f0;  // Todo: Maybe the program should actually respect the windows theme settings.
 COLORREF text_color = 0x00000000;
-HBRUSH red_brush=CreateSolidBrush(0x000000FF);
-HBRUSH white_brush=CreateSolidBrush(0x00FFFFFF);
-HBRUSH black_brush=CreateSolidBrush(0x00000000);
-HBRUSH background_brush=CreateSolidBrush(background_color);
+HBRUSH red_brush = CreateSolidBrush(0x000000FF);
+HBRUSH white_brush = CreateSolidBrush(0x00FFFFFF);
+HBRUSH black_brush = CreateSolidBrush(0x00000000);
+HBRUSH background_brush = CreateSolidBrush(background_color);
 
 HDC          hdc_backbuffer, hdc_backbuffer_2;
 HBITMAP      hbm_backbuffer, hbm_backbuffer_2;
@@ -85,12 +88,12 @@ auto t_start = std::chrono::high_resolution_clock::now();
 TCHAR global_temp_string[300];
 TCHAR info_string_left[300];
 TCHAR info_string_right[300];
-TCHAR speed_unit_str_cpms[10]=L"counts/ms";
-TCHAR speed_unit_str_cmps[10]=L"cm/s";
-TCHAR move_unit_str_cpms[21]=L"deg/(counts*0.022)";
-TCHAR move_unit_str_cmps[10]=L"deg/cm";
-TCHAR *speed_unit_str=speed_unit_str_cpms;
-TCHAR *move_unit_str=move_unit_str_cpms;
+TCHAR speed_unit_str_cpms[10] = L"counts/ms";
+TCHAR speed_unit_str_cmps[10] = L"cm/s";
+TCHAR move_unit_str_cpms[21] = L"deg/(counts*0.022)";
+TCHAR move_unit_str_cmps[10] = L"deg/cm";
+TCHAR *speed_unit_str = speed_unit_str_cpms;
+TCHAR *move_unit_str = move_unit_str_cpms;
 
 // Forward declarations of functions included in this code module:
 ATOM				MyRegisterClass(HINSTANCE hInstance);
@@ -104,18 +107,17 @@ void ConvertToMcpi(double convert_to_mcpi);
 void ConvertFromMcpi();
 
 int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
-                       _In_opt_ HINSTANCE hPrevInstance,
-                       _In_ LPTSTR    lpCmdLine,
-                       _In_ int       nCmdShow)
+  _In_opt_ HINSTANCE hPrevInstance,
+  _In_ LPTSTR    lpCmdLine,
+  _In_ int       nCmdShow)
 {
   UNREFERENCED_PARAMETER(hPrevInstance);
   UNREFERENCED_PARAMETER(lpCmdLine);
 
-  // TODO: Place code here.
   MSG msg;
   HACCEL hAccelTable;
-  standard_font = CreateFont (13, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET, 
-    OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, 
+  standard_font = CreateFont(13, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET,
+    OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
     DEFAULT_PITCH | FF_DONTCARE, TEXT("MS Shell Dlg"));
 
   // Initialize global strings
@@ -126,11 +128,11 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
   INITCOMMONCONTROLSEX InitCtrlEx;
 
   InitCtrlEx.dwSize = sizeof(INITCOMMONCONTROLSEX);
-  InitCtrlEx.dwICC  = ICC_LINK_CLASS, ICC_PROGRESS_CLASS, ICC_STANDARD_CLASSES ;
+  InitCtrlEx.dwICC = ICC_LINK_CLASS, ICC_PROGRESS_CLASS, ICC_STANDARD_CLASSES;
   InitCommonControlsEx(&InitCtrlEx);
 
   // Perform application initialization:
-  if (!InitInstance (hInstance, nCmdShow))
+  if (!InitInstance(hInstance, nCmdShow))
   {
     return FALSE;
   }
@@ -141,14 +143,14 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
   while (GetMessage(&msg, NULL, 0, 0))
   {
 
-    if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg) && !IsDialogMessage(main_window,&msg))
+    if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg) && !IsDialogMessage(main_window, &msg))
     {
       TranslateMessage(&msg);
       DispatchMessage(&msg);
     }
   }
 
-  return (int) msg.wParam;
+  return (int)msg.wParam;
 }
 
 
@@ -159,18 +161,18 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 
   wcex.cbSize = sizeof(WNDCLASSEX);
 
-  wcex.style			= CS_HREDRAW | CS_VREDRAW;
-  wcex.lpfnWndProc	= WndProc;
-  wcex.cbClsExtra		= 0;
-  wcex.cbWndExtra		= 0;
-  wcex.hInstance		= hInstance;
+  wcex.style = CS_HREDRAW | CS_VREDRAW;
+  wcex.lpfnWndProc = WndProc;
+  wcex.cbClsExtra = 0;
+  wcex.cbWndExtra = 0;
+  wcex.hInstance = hInstance;
   //	wcex.hIcon			= LoadIcon(hInstance, MAKEINTRESOURCE(IDI_QLMOUSEACCELHELPER
-  wcex.hIcon			= LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON1));
-  wcex.hCursor		= LoadCursor(NULL, IDC_ARROW);
-  wcex.hbrBackground	= background_brush;
-  wcex.lpszMenuName	= MAKEINTRESOURCE(IDR_MENU1);
-  wcex.lpszClassName	= szWindowClass;
-  wcex.hIconSm		= LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_ICON1));
+  wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON1));
+  wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
+  wcex.hbrBackground = background_brush;
+  wcex.lpszMenuName = MAKEINTRESOURCE(IDR_MENU1);
+  wcex.lpszClassName = szWindowClass;
+  wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_ICON1));
 
   return RegisterClassEx(&wcex);
 }
@@ -183,7 +185,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
   //  hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
   //     CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
-  hWnd = main_window = CreateWindow(szWindowClass, szTitle,  WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_CLIPCHILDREN,
+  hWnd = main_window = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_CLIPCHILDREN,
     CW_USEDEFAULT, CW_USEDEFAULT, 525, 310, NULL, NULL, hInstance, NULL);
 
   if (!hWnd)
@@ -192,20 +194,20 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
   }
 
   ShowWindow(hWnd, nCmdShow);
-  SendMessage(hWnd,WM_COMMAND,MAKEWPARAM(0, EN_CHANGE), 0);
+  SendMessage(hWnd, WM_COMMAND, MAKEWPARAM(0, EN_CHANGE), 0);
   UpdateWindow(hWnd);
   //   SetWindowPos(hWnd,HWND_TOPMOST,0,0,444,444,0);
   RAWINPUTDEVICE rid[1];
 
-  rid[0].usUsagePage = 0x01; 
-  rid[0].usUsage = 0x02; 
-  rid[0].dwFlags = RIDEV_INPUTSINK;  
+  rid[0].usUsagePage = 0x01;
+  rid[0].usUsage = 0x02;
+  rid[0].dwFlags = RIDEV_INPUTSINK;
   rid[0].hwndTarget = hWnd;
 
 
   if (RegisterRawInputDevices(rid, 1, sizeof(rid[0])) == FALSE) {
     //registration failed. Call GetLastError for the cause of the error
-    MessageBox(NULL,L"Could not register mouse input.",L"Error",MB_OK);
+    MessageBox(NULL, L"Could not register mouse input.", L"Error", MB_OK);
   }
 
 
@@ -215,12 +217,12 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 void CreateToolTipForRect(HWND hwndParent, HINSTANCE ginst, TCHAR* text)
 {
   // Create a tooltip.
-  HWND hwndTT = CreateWindowEx(WS_EX_TOPMOST, TOOLTIPS_CLASS, NULL, 
-    WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP, 
-    CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, 
-    hwndParent, NULL, ginst,NULL);
+  HWND hwndTT = CreateWindowEx(WS_EX_TOPMOST, TOOLTIPS_CLASS, NULL,
+    WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP,
+    CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+    hwndParent, NULL, ginst, NULL);
 
-  SetWindowPos(hwndTT, HWND_TOPMOST, 0, 0, 0, 0, 
+  SetWindowPos(hwndTT, HWND_TOPMOST, 0, 0, 0, 0,
     SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
   //SendMessage(hwndTT,TTM_SETMAXTIPWIDTH, 0, 200);  // Multiline-tooltip
 
@@ -228,17 +230,17 @@ void CreateToolTipForRect(HWND hwndParent, HINSTANCE ginst, TCHAR* text)
   // Set up "tool" information. In this case, the "tool" is the entire parent window.
 
   TOOLINFO ti = { 0 };
-  ti.cbSize   = sizeof(TOOLINFO); // This only works if it if -4 is appended when visual styles are disabled.
-  ti.uFlags   = TTF_SUBCLASS;
-  ti.hwnd     = hwndParent;
-  ti.hinst    = ginst;
+  ti.cbSize = sizeof(TOOLINFO); // This only works if it if -4 is appended when visual styles are disabled.
+  ti.uFlags = TTF_SUBCLASS;
+  ti.hwnd = hwndParent;
+  ti.hinst = ginst;
   ti.lpszText = text;
 
-  GetClientRect (hwndParent, &ti.rect);
+  GetClientRect(hwndParent, &ti.rect);
 
   // Associate the tooltip with the "tool" window.
-  SendMessage(hwndTT, TTM_ADDTOOL, 0, (LPARAM)  (LPTOOLINFO)&ti);	
-} 
+  SendMessage(hwndTT, TTM_ADDTOOL, 0, (LPARAM)(LPTOOLINFO)&ti);
+}
 
 LRESULT CALLBACK TextBoxProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -257,24 +259,24 @@ LRESULT CALLBACK TextBoxProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 
     hdc_backbuffer_2 = CreateCompatibleDC(hdc);
     hbm_backbuffer_2 = CreateCompatibleBitmap(hdc, 400, 100);
-    h_old_2   = SelectObject(hdc_backbuffer_2, hbm_backbuffer_2);
+    h_old_2 = SelectObject(hdc_backbuffer_2, hbm_backbuffer_2);
 
-    FillRect(hdc_backbuffer_2,&invalidate_rect_2,background_brush);
+    FillRect(hdc_backbuffer_2, &invalidate_rect_2, background_brush);
 
-    SetTextColor(hdc_backbuffer_2,0x00000000);
-    SetBkMode(hdc_backbuffer_2,TRANSPARENT);
-    SelectObject(hdc_backbuffer_2,standard_font);
-    DrawText(hdc_backbuffer_2,info_string_left,wcslen(info_string_left),&invalidate_rect_2,DT_LEFT | DT_EXTERNALLEADING | DT_WORDBREAK);
-    DrawText(hdc_backbuffer_2,info_string_right,wcslen(info_string_right),&invalidate_rect_2,DT_RIGHT | DT_EXTERNALLEADING | DT_WORDBREAK);
+    SetTextColor(hdc_backbuffer_2, 0x00000000);
+    SetBkMode(hdc_backbuffer_2, TRANSPARENT);
+    SelectObject(hdc_backbuffer_2, standard_font);
+    DrawText(hdc_backbuffer_2, info_string_left, wcslen(info_string_left), &invalidate_rect_2, DT_LEFT | DT_EXTERNALLEADING | DT_WORDBREAK);
+    DrawText(hdc_backbuffer_2, info_string_right, wcslen(info_string_right), &invalidate_rect_2, DT_RIGHT | DT_EXTERNALLEADING | DT_WORDBREAK);
     BitBlt(hdc, 0, 0, 400, 100, hdc_backbuffer_2, 0, 0, SRCCOPY);
 
 
     SelectObject(hdc_backbuffer_2, h_old_2);
     DeleteObject(hbm_backbuffer_2);
-    DeleteDC    (hdc_backbuffer_2);
+    DeleteDC(hdc_backbuffer_2);
 
 
-    EndPaint(hWnd,&ps);
+    EndPaint(hWnd, &ps);
 
     break;
   case WM_DESTROY:
@@ -297,195 +299,207 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
   {
 
   case WM_CREATE:
+  {
+    // Todo: 
+    // 1. Put this in an actual panel and make program resizeable (maybe)
+    // 2. All those edit boxes should probably be classes...
 
-    // Todo: Put this all in a panel and make the program resizeable.
+    int x_pos = 420;
+    int y_pos = 10;
+    int edit_width = 35;
+    int edit_caption_height = 17;
+    int caption_width = 47;
+    int caption_x_pos = x_pos + edit_width + 10;
+    int y_space = 24;
+
     sens_box = CreateWindow(L"EDIT",
       L"4",
       WS_BORDER | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
-      420,10,35,17,
-      hWnd, NULL,NULL, NULL);
-    SendMessage(sens_box,WM_SETFONT,(WPARAM)standard_font,TRUE);
+      x_pos, y_pos + y_space * 0, edit_width, edit_caption_height,
+      hWnd, NULL, NULL, NULL);
+    SendMessage(sens_box, WM_SETFONT, (WPARAM)standard_font, TRUE);
     //SetWindowSubclass(sens_box,ButtonProc,0,0); // 
 
     accel_box = CreateWindow(L"EDIT",
       L"0",
       WS_BORDER | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
-      420,34,35,17,
-      hWnd, NULL,NULL, NULL);
-    SendMessage(accel_box,WM_SETFONT,(WPARAM)standard_font,TRUE);
+      x_pos, y_pos + y_space * 1, edit_width, edit_caption_height,
+      hWnd, NULL, NULL, NULL);
+    SendMessage(accel_box, WM_SETFONT, (WPARAM)standard_font, TRUE);
 
     offset_box = CreateWindow(L"EDIT",
       L"0",
       WS_BORDER | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
-      420,58,35,17,
-      hWnd, NULL,NULL, NULL);
-    SendMessage(offset_box,WM_SETFONT,(WPARAM)standard_font,TRUE);
+      x_pos, y_pos + y_space * 2, edit_width, edit_caption_height,
+      hWnd, NULL, NULL, NULL);
+    SendMessage(offset_box, WM_SETFONT, (WPARAM)standard_font, TRUE);
 
     senscap_box = CreateWindow(L"EDIT",
       L"0",
       WS_BORDER | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
-      420,82,35,17,
-      hWnd, NULL,NULL, NULL);
-    SendMessage(senscap_box,WM_SETFONT,(WPARAM)standard_font,TRUE);
+      x_pos, y_pos + y_space * 3, edit_width, edit_caption_height,
+      hWnd, NULL, NULL, NULL);
+    SendMessage(senscap_box, WM_SETFONT, (WPARAM)standard_font, TRUE);
 
     power_box = CreateWindow(L"EDIT",
       L"2",
       WS_BORDER | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
-      420,106,35,17,
-      hWnd, NULL,NULL, NULL);
-    SendMessage(power_box,WM_SETFONT,(WPARAM)standard_font,TRUE);
+      x_pos, y_pos + y_space * 4, edit_width, edit_caption_height,
+      hWnd, NULL, NULL, NULL);
+    SendMessage(power_box, WM_SETFONT, (WPARAM)standard_font, TRUE);
 
     m_cpi_box = CreateWindow(L"EDIT",
       L"0",
       WS_BORDER | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
-      420,130,35,17,
-      hWnd, NULL,NULL, NULL);
-    SendMessage(m_cpi_box,WM_SETFONT,(WPARAM)standard_font,TRUE);
+      x_pos, y_pos + y_space * 5, edit_width, edit_caption_height,
+      hWnd, NULL, NULL, NULL);
+    SendMessage(m_cpi_box, WM_SETFONT, (WPARAM)standard_font, TRUE);
 
     fps_box = CreateWindow(L"EDIT",
       L"125",
       WS_BORDER | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
-      420,154,35,17,
-      hWnd, NULL,NULL, NULL);
-    SendMessage(fps_box,WM_SETFONT,(WPARAM)standard_font,TRUE);
+      x_pos, y_pos + y_space * 6, edit_width, edit_caption_height,
+      hWnd, NULL, NULL, NULL);
+    SendMessage(fps_box, WM_SETFONT, (WPARAM)standard_font, TRUE);
 
     x_scale_box = CreateWindow(L"EDIT",
       L"8",
       WS_BORDER | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
-      420,178,35,17,
-      hWnd, NULL,NULL, NULL);
-    SendMessage(x_scale_box,WM_SETFONT,(WPARAM)standard_font,TRUE);
+      x_pos, y_pos + y_space * 7, edit_width, edit_caption_height,
+      hWnd, NULL, NULL, NULL);
+    SendMessage(x_scale_box, WM_SETFONT, (WPARAM)standard_font, TRUE);
 
     y_scale_box = CreateWindow(L"EDIT",
       L"8",
       WS_BORDER | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
-      420,202,35,17,
-      hWnd, NULL,NULL, NULL);
-    SendMessage(y_scale_box,WM_SETFONT,(WPARAM)standard_font,TRUE);
+      x_pos, y_pos + y_space * 8, edit_width, edit_caption_height,
+      hWnd, NULL, NULL, NULL);
+    SendMessage(y_scale_box, WM_SETFONT, (WPARAM)standard_font, TRUE);
 
     caption_box = CreateWindow(L"STATIC",
       L"sens",
       WS_CHILD | WS_VISIBLE | SS_NOTIFY,
-      465,10,45,17,
-      hWnd, NULL,NULL, NULL);
-    SendMessage(caption_box,WM_SETFONT,(WPARAM)standard_font,TRUE);
-    CreateToolTipForRect(caption_box,hInst,L"cl_sensitivity");
-    CreateToolTipForRect(sens_box,hInst,L"cl_sensitivity");
+      caption_x_pos, y_pos + y_space * 0, caption_width, edit_caption_height,
+      hWnd, NULL, NULL, NULL);
+    SendMessage(caption_box, WM_SETFONT, (WPARAM)standard_font, TRUE);
+    CreateToolTipForRect(caption_box, hInst, L"cl_sensitivity");
+    CreateToolTipForRect(sens_box, hInst, L"cl_sensitivity");
 
     caption_box = CreateWindow(L"STATIC",
       L"accel",
       WS_CHILD | WS_VISIBLE | SS_NOTIFY,
-      465,34,45,17,
-      hWnd, NULL,NULL, NULL);
-    SendMessage(caption_box,WM_SETFONT,(WPARAM)standard_font,TRUE);
-    CreateToolTipForRect(caption_box,hInst,L"cl_mouseAccel");
-    CreateToolTipForRect(accel_box,hInst,L"cl_mouseAccel");
+      caption_x_pos, y_pos + y_space * 1, caption_width, edit_caption_height,
+      hWnd, NULL, NULL, NULL);
+    SendMessage(caption_box, WM_SETFONT, (WPARAM)standard_font, TRUE);
+    CreateToolTipForRect(caption_box, hInst, L"cl_mouseAccel");
+    CreateToolTipForRect(accel_box, hInst, L"cl_mouseAccel");
 
     caption_box = CreateWindow(L"STATIC",
       L"offset",
       WS_CHILD | WS_VISIBLE | SS_NOTIFY,
-      465,58,45,17,
-      hWnd, NULL,NULL, NULL);
-    SendMessage(caption_box,WM_SETFONT,(WPARAM)standard_font,TRUE);
-    CreateToolTipForRect(caption_box,hInst,L"cl_mouseAccelOffset");
-    CreateToolTipForRect(offset_box,hInst,L"cl_mouseAccelOffset");
+      caption_x_pos, y_pos + y_space * 2, caption_width, edit_caption_height,
+      hWnd, NULL, NULL, NULL);
+    SendMessage(caption_box, WM_SETFONT, (WPARAM)standard_font, TRUE);
+    CreateToolTipForRect(caption_box, hInst, L"cl_mouseAccelOffset");
+    CreateToolTipForRect(offset_box, hInst, L"cl_mouseAccelOffset");
 
     caption_box = CreateWindow(L"STATIC",
       L"cap",
       WS_CHILD | WS_VISIBLE | SS_NOTIFY,
-      465,82,45,17,
-      hWnd, NULL,NULL, NULL);
-    SendMessage(caption_box,WM_SETFONT,(WPARAM)standard_font,TRUE);
-    CreateToolTipForRect(caption_box,hInst,L"cl_mouseSensCap");
-    CreateToolTipForRect(senscap_box,hInst,L"cl_mouseSensCap");
+      caption_x_pos, y_pos + y_space * 3, caption_width, edit_caption_height,
+      hWnd, NULL, NULL, NULL);
+    SendMessage(caption_box, WM_SETFONT, (WPARAM)standard_font, TRUE);
+    CreateToolTipForRect(caption_box, hInst, L"cl_mouseSensCap");
+    CreateToolTipForRect(senscap_box, hInst, L"cl_mouseSensCap");
 
     caption_box = CreateWindow(L"STATIC",
       L"power",
       WS_CHILD | WS_VISIBLE | SS_NOTIFY,
-      465,106,45,17,
-      hWnd, NULL,NULL, NULL);
-    SendMessage(caption_box,WM_SETFONT,(WPARAM)standard_font,TRUE);
-    CreateToolTipForRect(caption_box,hInst,L"cl_mouseAccelPower");
-    CreateToolTipForRect(power_box,hInst,L"cl_mouseAccelPower");
+      caption_x_pos, y_pos + y_space * 4, caption_width, edit_caption_height,
+      hWnd, NULL, NULL, NULL);
+    SendMessage(caption_box, WM_SETFONT, (WPARAM)standard_font, TRUE);
+    CreateToolTipForRect(caption_box, hInst, L"cl_mouseAccelPower");
+    CreateToolTipForRect(power_box, hInst, L"cl_mouseAccelPower");
 
     caption_box = CreateWindow(L"STATIC",
       L"m_cpi",
       WS_CHILD | WS_VISIBLE | SS_NOTIFY,
-      465,130,45,17,
-      hWnd, NULL,NULL, NULL);
-    SendMessage(caption_box,WM_SETFONT,(WPARAM)standard_font,TRUE);
-    CreateToolTipForRect(caption_box,hInst,L"m_cpi");
-    CreateToolTipForRect(m_cpi_box,hInst,L"m_cpi");
+      caption_x_pos, y_pos + y_space * 5, caption_width, edit_caption_height,
+      hWnd, NULL, NULL, NULL);
+    SendMessage(caption_box, WM_SETFONT, (WPARAM)standard_font, TRUE);
+    CreateToolTipForRect(caption_box, hInst, L"m_cpi");
+    CreateToolTipForRect(m_cpi_box, hInst, L"m_cpi");
 
     caption_box = CreateWindow(L"STATIC",
       L"fps",
       WS_CHILD | WS_VISIBLE | SS_NOTIFY,
-      465,154,45,17,
-      hWnd, NULL,NULL, NULL);
-    SendMessage(caption_box,WM_SETFONT,(WPARAM)standard_font,TRUE);
-    CreateToolTipForRect(caption_box,hInst,L"com_maxfps");
-    CreateToolTipForRect(fps_box,hInst,L"com_maxfps");
+      caption_x_pos, y_pos + y_space * 6, caption_width, edit_caption_height,
+      hWnd, NULL, NULL, NULL);
+    SendMessage(caption_box, WM_SETFONT, (WPARAM)standard_font, TRUE);
+    CreateToolTipForRect(caption_box, hInst, L"com_maxfps");
+    CreateToolTipForRect(fps_box, hInst, L"com_maxfps");
 
     caption_box = CreateWindow(L"STATIC",
       L"x-scale",
       WS_CHILD | WS_VISIBLE | SS_NOTIFY,
-      465,178,47,17,
-      hWnd, NULL,NULL, NULL);
-    SendMessage(caption_box,WM_SETFONT,(WPARAM)standard_font,TRUE);
-    CreateToolTipForRect(caption_box,hInst,L"scale for x-axis");
-    CreateToolTipForRect(x_scale_box,hInst,L"scale for x-axis");
+      caption_x_pos, y_pos + y_space * 7, caption_width, edit_caption_height,
+      hWnd, NULL, NULL, NULL);
+    SendMessage(caption_box, WM_SETFONT, (WPARAM)standard_font, TRUE);
+    CreateToolTipForRect(caption_box, hInst, L"scale for x-axis");
+    CreateToolTipForRect(x_scale_box, hInst, L"scale for x-axis");
 
     caption_box = CreateWindow(L"STATIC",
       L"y-scale",
       WS_CHILD | WS_VISIBLE | SS_NOTIFY,
-      465,202,47,17,
-      hWnd, NULL,NULL, NULL);
-    SendMessage(caption_box,WM_SETFONT,(WPARAM)standard_font,TRUE);
-    CreateToolTipForRect(caption_box,hInst,L"scale for y-axis");
-    CreateToolTipForRect(y_scale_box,hInst,L"scale for y-axis");
+      caption_x_pos, y_pos + y_space * 8, caption_width, edit_caption_height,
+      hWnd, NULL, NULL, NULL);
+    SendMessage(caption_box, WM_SETFONT, (WPARAM)standard_font, TRUE);
+    CreateToolTipForRect(caption_box, hInst, L"scale for y-axis");
+    CreateToolTipForRect(y_scale_box, hInst, L"scale for y-axis");
 
 
     text_box = CreateWindow(L"STATIC",
       L"If you can see this something is not working.",
       WS_CHILD | WS_VISIBLE,
-      10,220,400,30,
-      hWnd, NULL,NULL, NULL);
+      10, 220, 400, 30,
+      hWnd, NULL, NULL, NULL);
 
     convert_button = CreateWindow(L"BUTTON",
       L"convert",
       WS_CHILD | WS_VISIBLE | BS_FLAT,
-      432,222,55,23,
-      hWnd, (HMENU) IDC_CONVERT_BUTTON, NULL, NULL);
-    SendMessage(convert_button,WM_SETFONT,(WPARAM)standard_font,TRUE);
-    CreateToolTipForRect(convert_button,hInst,L"If m_cpi is set to 0, convert all settings to m_cpi system. Otherwise, convert all settings back.");
+      432, 222, 55, 23,
+      hWnd, (HMENU)IDC_CONVERT_BUTTON, NULL, NULL);
+    SendMessage(convert_button, WM_SETFONT, (WPARAM)standard_font, TRUE);
+    CreateToolTipForRect(convert_button, hInst, L"If m_cpi is set to 0, convert all settings to m_cpi system. Otherwise, convert all settings back.");
 
-    SetWindowLongPtr(text_box,-4,(LONG_PTR)&TextBoxProc);
+    SetWindowLongPtr(text_box, -4, (LONG_PTR)&TextBoxProc);
     break;
+  }
 
   case WM_COMMAND:
-    wmId    = LOWORD(wParam);
+    wmId = LOWORD(wParam);
     wmEvent = HIWORD(wParam);
     if (wmEvent == EN_CHANGE) {
-      GetWindowText(sens_box,global_temp_string,10);
-      sens=wcstod(global_temp_string,NULL);
-      GetWindowText(offset_box,global_temp_string,10);
-      offset=wcstod(global_temp_string,NULL);
-      GetWindowText(accel_box,global_temp_string,10);
-      accel=wcstod(global_temp_string,NULL);
-      GetWindowText(senscap_box,global_temp_string,10);
-      senscap=wcstod(global_temp_string,NULL);
-      GetWindowText(power_box,global_temp_string,10);
-      power=wcstod(global_temp_string,NULL)-1;
-      if (power<0) power=0;
-      GetWindowText(m_cpi_box,global_temp_string,10);
-      m_cpi=wcstod(global_temp_string,NULL);
-      GetWindowText(fps_box,global_temp_string,10);
-      fps=wcstod(global_temp_string,NULL);
-      GetWindowText(x_scale_box,global_temp_string,10);
-      x_max=wcstod(global_temp_string,NULL);
-      GetWindowText(y_scale_box,global_temp_string,10);
-      y_max=wcstod(global_temp_string,NULL);
-      InvalidateRect(hWnd,&invalidate_rect,false);
+      GetWindowText(sens_box, global_temp_string, 10);
+      sens = wcstod(global_temp_string, NULL);
+      GetWindowText(offset_box, global_temp_string, 10);
+      offset = wcstod(global_temp_string, NULL);
+      GetWindowText(accel_box, global_temp_string, 10);
+      accel = wcstod(global_temp_string, NULL);
+      GetWindowText(senscap_box, global_temp_string, 10);
+      senscap = wcstod(global_temp_string, NULL);
+      GetWindowText(power_box, global_temp_string, 10);
+      power = wcstod(global_temp_string, NULL) - 1;
+      if (power < 0) power = 0;
+      GetWindowText(m_cpi_box, global_temp_string, 10);
+      m_cpi = wcstod(global_temp_string, NULL);
+      GetWindowText(fps_box, global_temp_string, 10);
+      fps = wcstod(global_temp_string, NULL);
+      GetWindowText(x_scale_box, global_temp_string, 10);
+      x_max = wcstod(global_temp_string, NULL);
+      GetWindowText(y_scale_box, global_temp_string, 10);
+      y_max = wcstod(global_temp_string, NULL);
+      InvalidateRect(hWnd, &invalidate_rect, false);
     }
     switch (wmId)
     {
@@ -496,12 +510,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       DestroyWindow(hWnd);
       break;
     case IDC_CONVERT_BUTTON:
-      if (power!=1){
+      if (power != 1){
         MessageBeep(1);
         DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG3), hWnd, ErrorProc);
       }
       else {
-        if (m_cpi==0) {
+        if (m_cpi == 0) {
           DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG2), hWnd, ConvertProc);
         }
         else ConvertFromMcpi();
@@ -516,56 +530,57 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
   case WM_INPUT: {
 
     UINT dwSize;
-    GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL, &dwSize, 
+    GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL, &dwSize,
       sizeof(RAWINPUTHEADER));
     LPBYTE lpb = new BYTE[dwSize];
-    if (lpb == NULL) 
+    if (lpb == NULL)
     {
       return 0;
-    } 
+    }
 
-    if (GetRawInputData((HRAWINPUT)lParam, RID_INPUT, lpb, &dwSize, 
-      sizeof(RAWINPUTHEADER)) != dwSize )
-      OutputDebugString (TEXT("GetRawInputData does not return correct size !\n")); 
+    if (GetRawInputData((HRAWINPUT)lParam, RID_INPUT, lpb, &dwSize,
+      sizeof(RAWINPUTHEADER)) != dwSize)
+      OutputDebugString(TEXT("GetRawInputData does not return correct size !\n"));
 
     RAWINPUT* raw = (RAWINPUT*)lpb;
 
 
-    if (raw->header.dwType == RIM_TYPEMOUSE) 
-    {    
+    if (raw->header.dwType == RIM_TYPEMOUSE)
+    {
       lastx += raw->data.mouse.lLastX;
       lasty += raw->data.mouse.lLastY;
 
       auto t_end = std::chrono::high_resolution_clock::now();
-      double duration =(std::chrono::duration<double, std::micro>(t_end-t_start).count());
+      double duration = (std::chrono::duration<double, std::micro>(t_end - t_start).count());
 
-      if ((double)duration+1000>1000*1000/(fps)){
-        cur_fps=1*1000*1000/duration;
-        double mcpi2=m_cpi/2.54;
-        double usex=lastx;
-        double usey=lasty;
-        if (mcpi2>0) {
-          usex=lastx/mcpi2;
-          usey=lasty/mcpi2;
-        } 
-        speed = sqrt((double)usex*usex+usey*usey);
-
-        speed= 1000*speed /duration;
-        if (mcpi2>0) {
-          speed=speed*1000;
-          speed_unit_str=speed_unit_str_cmps;
-          move_unit_str=move_unit_str_cmps;
-        } else {
-          speed_unit_str=speed_unit_str_cpms;
-          move_unit_str=move_unit_str_cpms;
+      if ((double)duration + 1000 > 1000 * 1000 / (fps)){
+        cur_fps = 1 * 1000 * 1000 / duration;
+        double mcpi2 = m_cpi / 2.54;
+        double usex = lastx;
+        double usey = lasty;
+        if (mcpi2 > 0) {
+          usex = lastx / mcpi2;
+          usey = lasty / mcpi2;
         }
-        hResult = StringCchPrintf(info_string_left, STRSAFE_MAX_CCH, TEXT("mouse speed: %.3f %s\r\nmultiplier: %.3f %s\r\n"), 
+        speed = sqrt((double)usex*usex + usey*usey);
+
+        speed = 1000 * speed / duration;
+        if (mcpi2 > 0) {
+          speed = speed * 1000;
+          speed_unit_str = speed_unit_str_cmps;
+          move_unit_str = move_unit_str_cmps;
+        }
+        else {
+          speed_unit_str = speed_unit_str_cpms;
+          move_unit_str = move_unit_str_cpms;
+        }
+        hResult = StringCchPrintf(info_string_left, STRSAFE_MAX_CCH, TEXT("mouse speed: %.3f %s\r\nmultiplier: %.3f %s\r\n"),
           speed, speed_unit_str,
           multi, move_unit_str);
-        hResult = StringCchPrintf(info_string_right, STRSAFE_MAX_CCH, TEXT("%.0f fps"), 
+        hResult = StringCchPrintf(info_string_right, STRSAFE_MAX_CCH, TEXT("%.0f fps"),
           cur_fps);
 
-        InvalidateRect(hWnd,&invalidate_rect,false);
+        InvalidateRect(hWnd, &invalidate_rect, false);
 
         if (FAILED(hResult))
         {
@@ -573,17 +588,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         // OutputDebugString(info_string_left);
         // Static_SetText(text_box, info_string_left);
-        InvalidateRect(text_box, &invalidate_rect_2,false);
+        InvalidateRect(text_box, &invalidate_rect_2, false);
 
-        t_start =t_end;
-        lastx=0;
-        lasty=0;
+        t_start = t_end;
+        lastx = 0;
+        lasty = 0;
       }
-    } 
+    }
     delete[] lpb;
 
     return 0;
-                 }
+  }
 
 
 
@@ -594,65 +609,65 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     hdc_backbuffer = CreateCompatibleDC(hdc);
     hbm_backbuffer = CreateCompatibleBitmap(hdc, graph_x_max, graph_y_max);
 
-    h_old   = SelectObject(hdc_backbuffer, hbm_backbuffer);
+    h_old = SelectObject(hdc_backbuffer, hbm_backbuffer);
 
-    FillRect(hdc_backbuffer,&invalidate_rect,black_brush);
+    FillRect(hdc_backbuffer, &invalidate_rect, black_brush);
     hResult = StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.1f [%s]"), y_max, move_unit_str);
-    SetTextColor(hdc_backbuffer,0x00DDDDDD);
-    SetBkColor(hdc_backbuffer,0x00000000);
-    SelectObject(hdc_backbuffer,standard_font);
+    SetTextColor(hdc_backbuffer, 0x00DDDDDD);
+    SetBkColor(hdc_backbuffer, 0x00000000);
+    SelectObject(hdc_backbuffer, standard_font);
     TextOut(hdc_backbuffer, 3, 0, global_temp_string, wcslen(global_temp_string));
-    TextOut(hdc_backbuffer, 3, invalidate_rect.bottom-27, L"0", 1);
+    TextOut(hdc_backbuffer, 3, invalidate_rect.bottom - 27, L"0", 1);
 
-    hResult = StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("[%s] %.1f"),  speed_unit_str, x_max);
-    SetTextAlign(hdc_backbuffer,TA_RIGHT);
-    TextOut(hdc_backbuffer, invalidate_rect.right-13, invalidate_rect.bottom-27, global_temp_string, wcslen(global_temp_string));
+    hResult = StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("[%s] %.1f"), speed_unit_str, x_max);
+    SetTextAlign(hdc_backbuffer, TA_RIGHT);
+    TextOut(hdc_backbuffer, invalidate_rect.right - 13, invalidate_rect.bottom - 27, global_temp_string, wcslen(global_temp_string));
 
 
     //OutputDebugString(global_temp_string);
 
 
-    for (int i=0;i<graph_x_max;i++){
-      double x=i*x_max/graph_x_max;
+    for (int i = 0; i<graph_x_max; i++){
+      double x = i*x_max / graph_x_max;
 
-      double y=sens+pow((accel*(x-offset)),power);
+      double y = sens + pow((accel*(x - offset)), power);
 
-      if (offset>x) y=sens;
-      if (y>senscap && senscap>0) y=senscap;
-      int j=graph_y_max-y*graph_y_max/y_max;
-      SetPixel(hdc_backbuffer,i,j,0x00BBBBBB);
+      if (offset>x) y = sens;
+      if (y > senscap && senscap > 0) y = senscap;
+      int j = graph_y_max - y*graph_y_max / y_max;
+      SetPixel(hdc_backbuffer, i, j, 0x00BBBBBB);
     }
 
-    multi=sens+pow((accel*(speed-offset)),power);
+    multi = sens + pow((accel*(speed - offset)), power);
 
-    if (offset>speed) multi=sens;
-    if (multi>senscap && senscap>0) multi=senscap;
-    last_pixel.top=graph_y_max-multi*graph_y_max/y_max-2;
-    last_pixel.left=speed*graph_x_max/x_max-2;
-    last_pixel.right=speed*graph_x_max/x_max+3;
-    last_pixel.bottom=graph_y_max-multi*graph_y_max/y_max+3;
+    if (offset > speed) multi = sens;
+    if (multi > senscap && senscap > 0) multi = senscap;
+    last_pixel.top = graph_y_max - multi*graph_y_max / y_max - 2;
+    last_pixel.left = speed*graph_x_max / x_max - 2;
+    last_pixel.right = speed*graph_x_max / x_max + 3;
+    last_pixel.bottom = graph_y_max - multi*graph_y_max / y_max + 3;
 
-    FillRect(hdc_backbuffer,&last_pixel,red_brush);
+    FillRect(hdc_backbuffer, &last_pixel, red_brush);
 
     BitBlt(hdc, 10, 10, graph_x_max, graph_y_max, hdc_backbuffer, 0, 0, SRCCOPY);
 
 
     SelectObject(hdc_backbuffer, h_old);
     DeleteObject(hbm_backbuffer);
-    DeleteDC    (hdc_backbuffer);
+    DeleteDC(hdc_backbuffer);
 
 
-    EndPaint(hWnd,&ps);
+    EndPaint(hWnd, &ps);
 
     break;
   case WM_CTLCOLORSTATIC:
-    {
-      HDC hdcStatic = (HDC) wParam;
-      SetTextColor(hdcStatic, text_color);
-      SetBkColor(hdcStatic, background_color);
+  {
+    HDC hdcStatic = (HDC)wParam;
+    SetTextColor(hdcStatic, text_color);
+    SetBkColor(hdcStatic, background_color);
 
-      return (INT_PTR)background_brush;
-    }
+    return (INT_PTR)background_brush;
+  }
   case WM_DESTROY:
     PostQuitMessage(0);
     break;
@@ -680,13 +695,13 @@ INT_PTR CALLBACK AboutProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
   case WM_CTLCOLORDLG:
     return (INT_PTR)background_brush;
   case WM_CTLCOLORSTATIC:
-    {
-      HDC hdcStatic = (HDC) wParam;
-      SetTextColor(hdcStatic, text_color);
-      SetBkColor(hdcStatic, background_color);
+  {
+    HDC hdcStatic = (HDC)wParam;
+    SetTextColor(hdcStatic, text_color);
+    SetBkColor(hdcStatic, background_color);
 
-      return (INT_PTR)background_brush;
-    }
+    return (INT_PTR)background_brush;
+  }
 
   }
   return (INT_PTR)FALSE;
@@ -710,13 +725,13 @@ INT_PTR CALLBACK ErrorProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
   case WM_CTLCOLORDLG:
     return (INT_PTR)background_brush;
   case WM_CTLCOLORSTATIC:
-    {
-      HDC hdcStatic = (HDC) wParam;
-      SetTextColor(hdcStatic, text_color);
-      SetBkColor(hdcStatic, background_color);
+  {
+    HDC hdcStatic = (HDC)wParam;
+    SetTextColor(hdcStatic, text_color);
+    SetBkColor(hdcStatic, background_color);
 
-      return (INT_PTR)background_brush;
-    }
+    return (INT_PTR)background_brush;
+  }
   }
   return (INT_PTR)FALSE;
 }
@@ -730,16 +745,16 @@ INT_PTR CALLBACK ConvertProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
     mcpi_convert_box = CreateWindow(L"EDIT",
       L"",
       WS_BORDER | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
-      105,10,35,17,
-      hDlg, (HMENU)IDC_MCPI_BOX,NULL, NULL);
-    SendMessage(mcpi_convert_box,WM_SETFONT,(WPARAM)standard_font,TRUE);
+      105, 10, 35, 17,
+      hDlg, (HMENU)IDC_MCPI_BOX, NULL, NULL);
+    SendMessage(mcpi_convert_box, WM_SETFONT, (WPARAM)standard_font, TRUE);
 
     caption_box = CreateWindow(L"STATIC",
       L"CPI",
       WS_CHILD | WS_VISIBLE,
-      145,12,35,17,
-      hDlg, (HMENU)IDC_MCPI_BOX,NULL, NULL);
-    SendMessage(caption_box,WM_SETFONT,(WPARAM)standard_font,TRUE);
+      145, 12, 35, 17,
+      hDlg, (HMENU)IDC_MCPI_BOX, NULL, NULL);
+    SendMessage(caption_box, WM_SETFONT, (WPARAM)standard_font, TRUE);
     //SetFocus(GetDlgItem(hDlg, IDC_MCPI_BOX));
     SendMessage(hDlg, WM_NEXTDLGCTL, (WPARAM)mcpi_convert_box, TRUE);
     return (INT_PTR)FALSE;
@@ -748,7 +763,7 @@ INT_PTR CALLBACK ConvertProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
     if (LOWORD(wParam) == IDOK)
     {
       GetDlgItemText(hDlg, IDC_MCPI_BOX, global_temp_string, 10);
-      double convert_to_mcpi=wcstod(global_temp_string,NULL);
+      double convert_to_mcpi = wcstod(global_temp_string, NULL);
       ConvertToMcpi(convert_to_mcpi);
 
       EndDialog(hDlg, LOWORD(wParam));
@@ -763,71 +778,71 @@ INT_PTR CALLBACK ConvertProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
   case WM_CTLCOLORDLG:
     return (INT_PTR)background_brush;
   case WM_CTLCOLORSTATIC:
-    {
-      HDC hdcStatic = (HDC) wParam;
-      SetTextColor(hdcStatic, text_color);
-      SetBkColor(hdcStatic, background_color);
+  {
+    HDC hdcStatic = (HDC)wParam;
+    SetTextColor(hdcStatic, text_color);
+    SetBkColor(hdcStatic, background_color);
 
-      return (INT_PTR)background_brush;
-    }
+    return (INT_PTR)background_brush;
+  }
   }
   return (INT_PTR)FALSE;
 }
 
 
 void ConvertToMcpi(double convert_to_mcpi){
-  double new_sens=SensToMcpiSens(sens,0.022,convert_to_mcpi);
-  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_sens);
-  Static_SetText(sens_box,global_temp_string);
+  double new_sens = SensToMcpiSens(sens, 0.022, convert_to_mcpi);
+  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"), new_sens);
+  Static_SetText(sens_box, global_temp_string);
 
-  double new_senscap=SensToMcpiSens(senscap,0.022,convert_to_mcpi);
-  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_senscap);
-  Static_SetText(senscap_box,global_temp_string);
+  double new_senscap = SensToMcpiSens(senscap, 0.022, convert_to_mcpi);
+  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"), new_senscap);
+  Static_SetText(senscap_box, global_temp_string);
 
-  double new_accel=AccelToMcpiAccel(accel,0.022,convert_to_mcpi);
-  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_accel);
-  Static_SetText(accel_box,global_temp_string);
+  double new_accel = AccelToMcpiAccel(accel, 0.022, convert_to_mcpi);
+  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"), new_accel);
+  Static_SetText(accel_box, global_temp_string);
 
-  double new_offset=OffsetToMcpiOffset(offset,convert_to_mcpi);
-  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_offset);
-  Static_SetText(offset_box,global_temp_string);
+  double new_offset = OffsetToMcpiOffset(offset, convert_to_mcpi);
+  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"), new_offset);
+  Static_SetText(offset_box, global_temp_string);
 
-  double new_y_scale=SensToMcpiSens(y_max,0.022,convert_to_mcpi);
-  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_y_scale);
-  Static_SetText(y_scale_box,global_temp_string);
+  double new_y_scale = SensToMcpiSens(y_max, 0.022, convert_to_mcpi);
+  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"), new_y_scale);
+  Static_SetText(y_scale_box, global_temp_string);
 
-  double new_x_scale=SpeedToMcpiSpeed(x_max,convert_to_mcpi);
-  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_x_scale);
-  Static_SetText(x_scale_box,global_temp_string);
+  double new_x_scale = SpeedToMcpiSpeed(x_max, convert_to_mcpi);
+  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"), new_x_scale);
+  Static_SetText(x_scale_box, global_temp_string);
 
-  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.0f"),convert_to_mcpi);
-  Static_SetText(m_cpi_box,global_temp_string);
+  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.0f"), convert_to_mcpi);
+  Static_SetText(m_cpi_box, global_temp_string);
 }
 
 void ConvertFromMcpi(){
-  double new_sens=McpiSensToSens(sens,0.022,m_cpi);
-  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_sens);
-  Static_SetText(sens_box,global_temp_string);
+  double new_sens = McpiSensToSens(sens, 0.022, m_cpi);
+  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"), new_sens);
+  Static_SetText(sens_box, global_temp_string);
 
-  double new_senscap=McpiSensToSens(senscap,0.022,m_cpi);
-  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_senscap);
-  Static_SetText(senscap_box,global_temp_string);
+  double new_senscap = McpiSensToSens(senscap, 0.022, m_cpi);
+  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"), new_senscap);
+  Static_SetText(senscap_box, global_temp_string);
 
-  double new_accel=McpiAccelToAccel(accel,0.022,m_cpi);
-  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_accel);
-  Static_SetText(accel_box,global_temp_string);
+  double new_accel = McpiAccelToAccel(accel, 0.022, m_cpi);
+  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"), new_accel);
+  Static_SetText(accel_box, global_temp_string);
 
-  double new_offset=McpiOffsetToOffset(offset,m_cpi);
-  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_offset);
-  Static_SetText(offset_box,global_temp_string);
+  double new_offset = McpiOffsetToOffset(offset, m_cpi);
+  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"), new_offset);
+  Static_SetText(offset_box, global_temp_string);
 
-  double new_y_scale=McpiSensToSens(y_max,0.022,m_cpi);
-  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_y_scale);
-  Static_SetText(y_scale_box,global_temp_string);
+  double new_y_scale = McpiSensToSens(y_max, 0.022, m_cpi);
+  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"), new_y_scale);
+  Static_SetText(y_scale_box, global_temp_string);
 
-  double new_x_scale=McpiSpeedToSpeed(x_max,m_cpi);
-  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"),new_x_scale);
-  Static_SetText(x_scale_box,global_temp_string);
+  double new_x_scale = McpiSpeedToSpeed(x_max, m_cpi);
+  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"), new_x_scale);
+  Static_SetText(x_scale_box, global_temp_string);
 
-  Static_SetText(m_cpi_box,L"0");
+  Static_SetText(m_cpi_box, L"0");
 }
