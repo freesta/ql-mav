@@ -21,7 +21,7 @@ When I played around with accel settings I never noticed shit while playing. I t
 
 - For accurate results, this program requires you to use raw mouse input ("in_mouse 2") in QL, but you're probably doing that anyway.
 - Your computer needs to be fast enough to run this. It should be but I am a bad programmer so it might require a high end PC, who knows.
-- Tested only on Windows 7 so far. Ubuntu/Wine didn't work for me due to raw mouse input.
+- Tested only on Windows 7 and Windows XP so far. Ubuntu/Wine didn't work for me due to raw mouse input.
 
 ## Not implemented:
 
