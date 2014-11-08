@@ -308,7 +308,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     int panel_pos_x = 420;
     int panel_pos_y = 10;
-    int edit_width = 35;
+    int edit_width = 45;
     int edit_caption_height = 17;
     int caption_width = 47;
     int caption_panel_pos_x = panel_pos_x + edit_width + 10;
@@ -799,27 +799,27 @@ INT_PTR CALLBACK ConvertProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 
 void ConvertToMcpi(double convert_to_mcpi){
   double new_sens = SensToMcpiSens(cvar_sens, 0.022, convert_to_mcpi);
-  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"), new_sens);
+  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.4f"), new_sens);
   Static_SetText(sens_box, global_temp_string);
 
   double new_senscap = SensToMcpiSens(cvar_senscap, 0.022, convert_to_mcpi);
-  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"), new_senscap);
+  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.4f"), new_senscap);
   Static_SetText(senscap_box, global_temp_string);
 
   double new_accel = AccelToMcpiAccel(cvar_accel, 0.022, convert_to_mcpi);
-  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"), new_accel);
+  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.4f"), new_accel);
   Static_SetText(accel_box, global_temp_string);
 
   double new_offset = OffsetToMcpiOffset(cvar_offset, convert_to_mcpi);
-  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"), new_offset);
+  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.4f"), new_offset);
   Static_SetText(offset_box, global_temp_string);
 
   double new_y_scale = SensToMcpiSens(graph_max_y, 0.022, convert_to_mcpi);
-  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"), new_y_scale);
+  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.4f"), new_y_scale);
   Static_SetText(y_scale_box, global_temp_string);
 
   double new_x_scale = SpeedToMcpiSpeed(graph_max_x, convert_to_mcpi);
-  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"), new_x_scale);
+  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.4f"), new_x_scale);
   Static_SetText(x_scale_box, global_temp_string);
 
   StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.0f"), convert_to_mcpi);
@@ -828,27 +828,27 @@ void ConvertToMcpi(double convert_to_mcpi){
 
 void ConvertFromMcpi(){
   double new_sens = McpiSensToSens(cvar_sens, 0.022, cvar_m_cpi);
-  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"), new_sens);
+  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.4f"), new_sens);
   Static_SetText(sens_box, global_temp_string);
 
   double new_senscap = McpiSensToSens(cvar_senscap, 0.022, cvar_m_cpi);
-  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"), new_senscap);
+  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.4f"), new_senscap);
   Static_SetText(senscap_box, global_temp_string);
 
   double new_accel = McpiAccelToAccel(cvar_accel, 0.022, cvar_m_cpi);
-  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"), new_accel);
+  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.4f"), new_accel);
   Static_SetText(accel_box, global_temp_string);
 
   double new_offset = McpiOffsetToOffset(cvar_offset, cvar_m_cpi);
-  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"), new_offset);
+  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.4f"), new_offset);
   Static_SetText(offset_box, global_temp_string);
 
   double new_y_scale = McpiSensToSens(graph_max_y, 0.022, cvar_m_cpi);
-  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"), new_y_scale);
+  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.4f"), new_y_scale);
   Static_SetText(y_scale_box, global_temp_string);
 
   double new_x_scale = McpiSpeedToSpeed(graph_max_x, cvar_m_cpi);
-  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.2f"), new_x_scale);
+  StringCchPrintf(global_temp_string, STRSAFE_MAX_CCH, TEXT("%.4f"), new_x_scale);
   Static_SetText(x_scale_box, global_temp_string);
 
   Static_SetText(m_cpi_box, L"0");
