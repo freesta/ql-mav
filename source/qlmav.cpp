@@ -64,14 +64,14 @@ double multi = 0.0;
 double cur_fps = 0.0;
 double cur_mouse_poll_rate = 0.0;
 
-long lastx = 0;
-long lasty = 0;
+long mouse_x_buffer = 0;
+long mouse_y_buffer = 0;
 
 RECT invalidate_rect = { 10, 10, 410, 219 };
 RECT invalidate_rect_2 = { 0, 0, 400, 100 };
 
 BITMAP bitmap;
-RECT last_pixel;
+RECT red_rectangle;
 COLORREF background_color = 0x00f0f0f0; 
 COLORREF text_color = 0x00000000;
 HBRUSH red_brush = CreateSolidBrush(0x000000FF);
@@ -84,8 +84,8 @@ HBITMAP      hbm_backbuffer, hbm_backbuffer_2;
 HANDLE       h_old, h_old_2;
 HFONT standard_font;
 
-auto t_start = std::chrono::high_resolution_clock::now();
-auto t_start_short = std::chrono::high_resolution_clock::now();
+auto t_start_frame = std::chrono::high_resolution_clock::now();
+auto t_start_mouse = std::chrono::high_resolution_clock::now();
 
 TCHAR global_temp_string[300];
 TCHAR info_string_left[300];
@@ -549,26 +549,26 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     if (raw->header.dwType == RIM_TYPEMOUSE)
     {
-      lastx += raw->data.mouse.lLastX;
-      lasty += raw->data.mouse.lLastY;
+      mouse_x_buffer += raw->data.mouse.lLastX;
+      mouse_y_buffer += raw->data.mouse.lLastY;
 
       auto t_end = std::chrono::high_resolution_clock::now();
-      double long_duration = (std::chrono::duration<double, std::micro>(t_end - t_start).count());
-      double short_duration = (std::chrono::duration<double, std::micro>(t_end - t_start_short).count());
-      double cur_mouse_poll_rate = 1000 * 1000 / short_duration;
+      double frame_duration = (std::chrono::duration<double, std::micro>(t_end - t_start_frame).count());
+      double mouse_input_duration = (std::chrono::duration<double, std::micro>(t_end - t_start_mouse).count());
+      double cur_mouse_poll_rate = 1000 * 1000 / mouse_input_duration;
 
-      if ((double)long_duration + 1000 > 1000 * 1000 / (max_fps)){
-        cur_fps = 1 * 1000 * 1000 / long_duration;
+      if ((double)frame_duration + 1000 > 1000 * 1000 / (max_fps)){
+        cur_fps = 1 * 1000 * 1000 / frame_duration;
         double mcpi2 = cvar_m_cpi / 2.54;
-        double usex = lastx;
-        double usey = lasty;
+        double mx = mouse_x_buffer;
+        double my = mouse_y_buffer;
         if (mcpi2 > 0) {
-          usex = lastx / mcpi2;
-          usey = lasty / mcpi2;
+          mx = mouse_x_buffer / mcpi2;
+          my = mouse_y_buffer / mcpi2;
         }
-        speed = sqrt((double)usex*usex + usey*usey);
+        speed = sqrt((double)mx*mx + my*my);
 
-        speed = 1000 * speed / long_duration;
+        speed = 1000 * speed / frame_duration;
         if (mcpi2 > 0) {
           speed = speed * 1000;
           speed_unit_str = speed_unit_str_cmps;
@@ -595,11 +595,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         // Static_SetText(text_box, info_string_left);
         
 
-        t_start = t_end;
-        lastx = 0;
-        lasty = 0;
+        t_start_frame = t_end;
+        mouse_x_buffer = 0;
+        mouse_y_buffer = 0;
       }
-      t_start_short = t_end;
+      t_start_mouse = t_end;
 
     }
     delete[] lpb;
@@ -649,12 +649,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     if (cvar_offset > speed) multi = cvar_sens;
     if (multi > cvar_senscap && cvar_senscap > 0) multi = cvar_senscap;
-    last_pixel.top = graph_height - multi*graph_height / graph_max_y - 2;
-    last_pixel.left = speed*graph_width / graph_max_x - 2;
-    last_pixel.right = speed*graph_width / graph_max_x + 3;
-    last_pixel.bottom = graph_height - multi*graph_height / graph_max_y + 3;
+    red_rectangle.top = graph_height - multi*graph_height / graph_max_y - 2;
+    red_rectangle.left = speed*graph_width / graph_max_x - 2;
+    red_rectangle.right = speed*graph_width / graph_max_x + 3;
+    red_rectangle.bottom = graph_height - multi*graph_height / graph_max_y + 3;
 
-    FillRect(hdc_backbuffer, &last_pixel, red_brush);
+    FillRect(hdc_backbuffer, &red_rectangle, red_brush);
 
     BitBlt(hdc, 10, 10, graph_width, graph_height, hdc_backbuffer, 0, 0, SRCCOPY);
 
